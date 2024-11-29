@@ -1281,14 +1281,14 @@ func (f *folder) foldIterable(iterable traits.Iterable) ref.Val {
 	for it.HasNext() == types.True {
 		f.iterVar1Val = it.Next()
 
-		cond := f.cond.Eval(f)
+		cond := f.cond.Eval(f.Activation)
 		condBool, ok := cond.(types.Bool)
 		if f.interrupted || (!f.exhaustive && ok && condBool != types.True) {
 			return f.evalResult()
 		}
 
 		// Update the accumulation value and check for eval interuption.
-		f.accuVal = f.step.Eval(f)
+		f.accuVal = f.step.Eval(f.Activation)
 		f.initialized = true
 		if f.interruptable && checkInterrupt(f.Activation) {
 			f.interrupted = true
@@ -1397,11 +1397,9 @@ func checkInterrupt(a Activation) bool {
 	return found && stop == true
 }
 
-var (
-	// pool of var folders to reduce allocations during folds.
-	folderPool = &sync.Pool{
-		New: func() any {
-			return &folder{}
-		},
-	}
-)
+// pool of var folders to reduce allocations during folds.
+var folderPool = &sync.Pool{
+	New: func() any {
+		return &folder{}
+	},
+}
